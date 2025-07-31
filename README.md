@@ -1,88 +1,353 @@
-# 🏗 Scaffold-ETH 2
+# 🎰 GhostDAG Lottery DApp
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+A decentralized lottery application built on the Kaspa blockchain ecosystem, featuring a sophisticated 5+1 number lottery system with multiple prize tiers, automated draws, and comprehensive administration tools.
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+## 🌟 Features
 
-⚙️ Built using NextJS, RainbowKit, Foundry/Hardhat, Wagmi, Viem, and Typescript.
+### 🎲 Lottery System
+- **5+1 Number Format**: Players select 5 main numbers (1-50) and 1 bonus number (1-10)
+- **Multiple Prize Tiers**: 6 different winning combinations with varying prize amounts
+- **Automated Draws**: Time-based draw scheduling with configurable intervals
+- **Prize Pool Management**: Automatic prize distribution and accumulation
+- **Donation System**: Community donations to boost prize pools
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldeth.io/components/): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+### 🔐 Security & Administration
+- **Upgradeable Contract**: UUPS proxy pattern for future improvements
+- **Pausable Operations**: Emergency stop functionality
+- **Access Control**: Owner-only administrative functions
+- **Reentrancy Protection**: Secure prize claiming mechanism
+- **Emergency Withdrawal**: Owner emergency fund recovery
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/b237af0c-5027-4849-a5c1-2e31495cccb1)
+### 🎨 Modern UI/UX
+- **Responsive Design**: Mobile-first approach with glassmorphism effects
+- **Real-time Updates**: Live contract state synchronization
+- **Wallet Integration**: Seamless Web3 wallet connectivity
+- **Interactive Components**: Intuitive ticket selection and purchase flow
+- **Admin Dashboard**: Comprehensive lottery management interface
 
-## Requirements
+## 🏗️ Architecture
 
-Before you begin, you need to install the following tools:
+### Smart Contract
+- **Language**: Solidity ^0.8.30
+- **Framework**: Hardhat with TypeScript
+- **Security**: OpenZeppelin contracts (Upgradeable, Pausable, ReentrancyGuard)
+- **Pattern**: UUPS Proxy for upgradeability
 
-- [Node (>= v20.18.3)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
+### Frontend
+- **Framework**: Next.js 15 with TypeScript
+- **Styling**: Tailwind CSS with custom design system
+- **Web3 Integration**: Wagmi + Viem for blockchain interactions
+- **State Management**: React hooks with scaffold-eth patterns
+- **UI Components**: Custom component library with modern design trends
 
-## Quickstart
+## 🚀 Quick Start
 
-To get started with Scaffold-ETH 2, follow the steps below:
+### Prerequisites
+- Node.js 18+
+- Yarn package manager
+- Git
 
-1. Install the latest version of Scaffold-ETH 2
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/NukeThemAII/GhostDAGLottery.git
+   cd GhostDAGLottery
+   ```
+
+2. **Install dependencies**
+   ```bash
+   yarn install
+   ```
+
+3. **Start local blockchain**
+   ```bash
+   yarn chain
+   ```
+
+4. **Deploy contracts**
+   ```bash
+   cd packages/hardhat
+   yarn deploy --network localhost
+   ```
+
+5. **Start frontend**
+   ```bash
+   cd packages/nextjs
+   yarn start
+   ```
+
+6. **Access the application**
+   - Frontend: http://localhost:3000
+   - Local blockchain: http://localhost:8545
+
+## 📁 Project Structure
 
 ```
-npx create-eth@latest
+GhostDAGLottery/
+├── packages/
+│   ├── hardhat/                 # Smart contract development
+│   │   ├── contracts/
+│   │   │   └── GhostDAGLottery.sol
+│   │   ├── deploy/
+│   │   │   └── 01_deploy_ghost_dag_lottery.ts
+│   │   ├── test/
+│   │   └── hardhat.config.ts
+│   └── nextjs/                  # Frontend application
+│       ├── app/
+│       │   └── page.tsx
+│       ├── components/
+│       │   └── lottery/
+│       │       ├── LotteryDashboard.tsx
+│       │       ├── LotteryOverview.tsx
+│       │       ├── TicketPurchase.tsx
+│       │       ├── DrawHistory.tsx
+│       │       ├── PlayerDashboard.tsx
+│       │       └── AdminPanel.tsx
+│       └── next.config.ts
+├── README.md
+└── package.json
 ```
 
-This command will install all the necessary packages and dependencies, so it might take a while.
+## 🎮 How to Play
 
-> [!NOTE]
-> You can also initialize your project with one of our extensions to add specific features or starter-kits. Learn more in our [extensions documentation](https://docs.scaffoldeth.io/extensions/).
+### For Players
 
-2. Run a local network in the first terminal:
+1. **Connect Wallet**: Connect your Web3 wallet to the application
+2. **Select Numbers**: Choose 5 main numbers (1-50) and 1 bonus number (1-10)
+3. **Purchase Tickets**: Buy multiple tickets for the current draw
+4. **Wait for Draw**: Draws occur automatically based on the configured interval
+5. **Check Results**: View winning numbers and check your tickets
+6. **Claim Prizes**: Claim any winnings from your player dashboard
 
+### Prize Tiers
+
+| Tier | Match | Prize Distribution |
+|------|-------|-------------------|
+| 1st  | 5+1   | 50% of prize pool |
+| 2nd  | 5+0   | 20% of prize pool |
+| 3rd  | 4+1   | 15% of prize pool |
+| 4th  | 4+0   | 8% of prize pool  |
+| 5th  | 3+1   | 4% of prize pool  |
+| 6th  | 3+0   | 3% of prize pool  |
+
+### For Administrators
+
+1. **Conduct Draws**: Manually trigger draws when conditions are met
+2. **Manage Settings**: Adjust ticket prices and draw intervals
+3. **Monitor Operations**: View contract status and statistics
+4. **Emergency Controls**: Pause operations or perform emergency withdrawals
+5. **Donation Management**: Accept and manage community donations
+
+## 🔧 Smart Contract API
+
+### Core Functions
+
+#### Player Functions
+```solidity
+// Purchase lottery tickets
+function purchaseTickets(Ticket[] memory tickets) external payable
+
+// Claim prize for a specific draw
+function claimPrize(uint256 drawId) external
+
+// Get player tickets for a draw
+function getPlayerTickets(address player, uint256 drawId) external view returns (Ticket[] memory)
+
+// Get player winnings for a draw
+function getPlayerWinnings(address player, uint256 drawId) external view returns (uint256)
 ```
-yarn chain
+
+#### Admin Functions
+```solidity
+// Conduct a lottery draw
+function conductDraw() external onlyOwner
+
+// Set ticket price
+function setTicketPrice(uint256 newPrice) external onlyOwner
+
+// Set draw interval
+function setDrawInterval(uint256 newInterval) external onlyOwner
+
+// Pause/unpause contract
+function pause() external onlyOwner
+function unpause() external onlyOwner
 ```
 
-This command starts a local Ethereum network that runs on your local machine and can be used for testing and development. Learn how to [customize your network configuration](https://docs.scaffoldeth.io/quick-start/environment#1-initialize-a-local-blockchain).
+#### View Functions
+```solidity
+// Get current lottery information
+function getLotteryInfo() external view returns (uint256, uint256, uint256, uint256)
 
-3. On a second terminal, deploy the test contract:
+// Get draw results
+function getDrawResults(uint256 drawId) external view returns (DrawResult memory)
 
+// Get contract balance
+function getContractBalance() external view returns (uint256)
 ```
+
+## 🎨 UI Components
+
+### Component Library
+
+- **LotteryDashboard**: Main navigation hub with tabbed interface
+- **LotteryOverview**: Real-time lottery statistics and game information
+- **TicketPurchase**: Interactive ticket selection with quick pick functionality
+- **DrawHistory**: Historical draw results and detailed statistics
+- **PlayerDashboard**: Personal ticket tracking and prize management
+- **AdminPanel**: Comprehensive contract administration interface
+
+### Design System
+
+- **Color Palette**: Custom gradient-based theme with semantic tokens
+- **Typography**: Responsive font scaling with modern typefaces
+- **Spacing**: Consistent spacing scale using Tailwind utilities
+- **Components**: Reusable UI components with variant support
+- **Animations**: Smooth transitions and micro-interactions
+
+## 🧪 Testing
+
+### Smart Contract Tests
+```bash
+cd packages/hardhat
+yarn test
+```
+
+### Frontend Tests
+```bash
+cd packages/nextjs
+yarn test
+```
+
+### Integration Tests
+```bash
+yarn test:integration
+```
+
+## 🚀 Deployment
+
+### Testnet Deployment
+```bash
+# Deploy to Sepolia testnet
+cd packages/hardhat
+yarn deploy --network sepolia
+```
+
+### Mainnet Deployment
+```bash
+# Deploy to mainnet (requires proper configuration)
+cd packages/hardhat
+yarn deploy --network mainnet
+```
+
+### Frontend Deployment
+```bash
+# Build for production
+cd packages/nextjs
+yarn build
+
+# Deploy to Vercel
 yarn deploy
 ```
 
-This command deploys a test smart contract to the local network. You can find more information about how to customize your contract and deployment script in our [documentation](https://docs.scaffoldeth.io/quick-start/environment#2-deploy-your-smart-contract).
+## 🔒 Security Considerations
 
-4. On a third terminal, start your NextJS app:
+### Smart Contract Security
+- **Audited Patterns**: Uses OpenZeppelin's battle-tested contracts
+- **Access Control**: Proper role-based permissions
+- **Reentrancy Protection**: Guards against reentrancy attacks
+- **Integer Overflow**: Safe math operations with Solidity 0.8+
+- **Emergency Mechanisms**: Pausable functionality for crisis management
 
-```
-yarn start
-```
+### Frontend Security
+- **Input Validation**: Client-side and contract-level validation
+- **Wallet Security**: Secure wallet connection patterns
+- **Transaction Safety**: Clear transaction confirmations and error handling
+- **Data Integrity**: Real-time synchronization with blockchain state
 
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
+## 📊 Performance Optimizations
 
-**What's next**:
+### Smart Contract
+- **Gas Optimization**: Efficient storage patterns and batch operations
+- **Event Logging**: Comprehensive event emission for off-chain indexing
+- **Proxy Pattern**: Upgradeable contracts without state migration
 
-Visit the [What's next section of our docs](https://docs.scaffoldeth.io/quick-start/environment#whats-next) to learn how to:
+### Frontend
+- **Code Splitting**: Lazy loading of components and routes
+- **State Management**: Efficient React state patterns
+- **Caching**: Smart contract call caching with wagmi
+- **Bundle Optimization**: Tree shaking and minification
 
-- Edit your smart contracts
-- Edit your deployment scripts
-- Customize your frontend
-- Edit the app config
-- Writing and running tests
-- [Setting up external services and API keys](https://docs.scaffoldeth.io/deploying/deploy-smart-contracts#configuration-of-third-party-services-for-production-grade-apps)
+## 🤝 Contributing
 
-## Documentation
+### Development Workflow
 
-Visit our [docs](https://docs.scaffoldeth.io) to learn all the technical details and guides of Scaffold-ETH 2.
+1. **Fork the repository**
+2. **Create a feature branch**
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+3. **Make your changes**
+4. **Run tests**
+   ```bash
+   yarn test
+   ```
+5. **Commit your changes**
+   ```bash
+   git commit -m 'Add amazing feature'
+   ```
+6. **Push to the branch**
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+7. **Open a Pull Request**
 
-To know more about its features, check out our [website](https://scaffoldeth.io).
+### Code Standards
 
-## Contributing to Scaffold-ETH 2
+- **TypeScript**: Strict type checking enabled
+- **ESLint**: Consistent code formatting and linting
+- **Prettier**: Automated code formatting
+- **Conventional Commits**: Standardized commit messages
 
-We welcome contributions to Scaffold-ETH 2!
+## 📄 License
 
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Scaffold-ETH 2**: Foundation framework for rapid DApp development
+- **OpenZeppelin**: Security-focused smart contract libraries
+- **Hardhat**: Ethereum development environment
+- **Next.js**: React framework for production applications
+- **Tailwind CSS**: Utility-first CSS framework
+- **Wagmi**: React hooks for Ethereum
+
+## 📞 Support
+
+- **Documentation**: [Project Wiki](https://github.com/NukeThemAII/GhostDAGLottery/wiki)
+- **Issues**: [GitHub Issues](https://github.com/NukeThemAII/GhostDAGLottery/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/NukeThemAII/GhostDAGLottery/discussions)
+
+## 🗺️ Roadmap
+
+### Phase 1: Core Implementation ✅
+- [x] Smart contract development
+- [x] Basic UI implementation
+- [x] Local development environment
+- [x] Core lottery functionality
+
+### Phase 2: Enhanced Features 🚧
+- [ ] Advanced analytics dashboard
+- [ ] Multi-language support
+- [ ] Mobile app development
+- [ ] Integration with Kaspa mainnet
+
+### Phase 3: Ecosystem Integration 📋
+- [ ] Cross-chain compatibility
+- [ ] NFT integration for special draws
+- [ ] Governance token implementation
+- [ ] Community-driven features
+
+---
+
+**Built with ❤️ for the Kaspa ecosystem**

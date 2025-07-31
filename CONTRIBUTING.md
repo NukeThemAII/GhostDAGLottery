@@ -1,92 +1,357 @@
-# Welcome to Scaffold-ETH 2 Contributing Guide
+# Contributing to GhostDAG Lottery
 
-Thank you for investing your time in contributing to Scaffold-ETH 2!
+We welcome contributions to the GhostDAG Lottery project! This document provides guidelines for contributing to the codebase.
 
-This guide aims to provide an overview of the contribution workflow to help us make the contribution process effective for everyone involved.
+## 🚀 Getting Started
 
-## About the Project
+### Prerequisites
+- Node.js 18+
+- Yarn package manager
+- Git
+- Basic knowledge of Solidity, TypeScript, and React
 
-Scaffold-ETH 2 is a minimal and forkable repo providing builders with a starter kit to build decentralized applications on Ethereum.
+### Development Setup
 
-Read the [README](README.md) to get an overview of the project.
+1. **Fork the repository**
+   ```bash
+   git fork https://github.com/NukeThemAII/GhostDAGLottery.git
+   ```
 
-### Vision
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/GhostDAGLottery.git
+   cd GhostDAGLottery
+   ```
 
-The goal of Scaffold-ETH 2 is to provide the primary building blocks for a decentralized application.
+3. **Install dependencies**
+   ```bash
+   yarn install
+   ```
 
-The repo can be forked to include integrations and more features, but we want to keep the `main` branch simple and minimal.
+4. **Set up development environment**
+   ```bash
+   # Terminal 1: Start local blockchain
+   yarn chain
+   
+   # Terminal 2: Deploy contracts
+   cd packages/hardhat
+   yarn deploy --network localhost
+   
+   # Terminal 3: Start frontend
+   cd packages/nextjs
+   yarn start
+   ```
 
-### Project Status
+## 📋 Development Guidelines
 
-The project is under active development.
+### Code Style
 
-You can view the open Issues, follow the development process, and contribute to the project.
+#### TypeScript/JavaScript
+- Use TypeScript for all new code
+- Follow ESLint and Prettier configurations
+- Use meaningful variable and function names
+- Add JSDoc comments for public functions
+- Prefer functional components with hooks
 
-### Rules
+#### Solidity
+- Follow Solidity style guide
+- Use NatSpec documentation
+- Implement comprehensive error handling
+- Follow security best practices
+- Use OpenZeppelin contracts when possible
 
-1. All code contributions require an Issue to be created and agreed upon by core contributors before submitting a Pull Request. This ensures proper discussion, alignment, and consensus on the proposed changes.
-2. Contributors must be humans, not bots.
-3. First-time contributions must not contain only spelling or grammatical fixes.
+### Commit Messages
 
-## Getting started
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
-You can contribute to this repo in many ways:
+```
+type(scope): description
 
-- Solve open issues
-- Report bugs or feature requests
-- Improve the documentation
+[optional body]
 
-Contributions are made via Issues and Pull Requests (PRs). A few general guidelines for contributions:
+[optional footer]
+```
 
-- Search for existing Issues and PRs before creating your own.
-- Contributions should only fix/add the functionality in the issue OR address style issues, not both.
-- If you're running into an error, please give context. Explain what you're trying to do and how to reproduce the error.
-- Please use the same formatting in the code repository. You can configure your IDE to do it by using the prettier / linting config files included in each package.
-- If applicable, please edit the README.md file to reflect the changes.
+#### Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
 
-### Issues
+#### Examples
+```bash
+feat(contract): add prize tier calculation function
+fix(ui): resolve ticket selection validation issue
+docs(readme): update installation instructions
+test(lottery): add comprehensive draw testing
+```
 
-Issues should be used to report problems, request a new feature, or discuss potential changes before a PR is created.
+### Branch Naming
 
-#### Solve an issue
+- `feature/description` - New features
+- `fix/description` - Bug fixes
+- `docs/description` - Documentation updates
+- `refactor/description` - Code refactoring
+- `test/description` - Test additions/updates
 
-Scan through our [existing issues](https://github.com/scaffold-eth/scaffold-eth-2/issues) to find one that interests you.
+## 🧪 Testing
 
-If a contributor is working on the issue, they will be assigned to the individual. If you find an issue to work on, you are welcome to assign it to yourself and open a PR with a fix for it.
+### Smart Contract Testing
 
-#### Create a new issue
+```bash
+cd packages/hardhat
+yarn test
+```
 
-If a related issue doesn't exist, you can open a new issue.
+#### Test Requirements
+- All public functions must have tests
+- Test both success and failure cases
+- Include edge case testing
+- Maintain >90% code coverage
 
-Some tips to follow when you are creating an issue:
+#### Test Structure
+```typescript
+describe("GhostDAGLottery", function () {
+  describe("Ticket Purchase", function () {
+    it("should allow valid ticket purchase", async function () {
+      // Test implementation
+    });
+    
+    it("should reject invalid ticket numbers", async function () {
+      // Test implementation
+    });
+  });
+});
+```
 
-- Provide as much context as possible. Over-communicate to give the most details to the reader.
-- Include the steps to reproduce the issue or the reason for adding the feature.
-- Screenshots, videos, etc., are highly appreciated.
+### Frontend Testing
 
-### Pull Requests
+```bash
+cd packages/nextjs
+yarn test
+```
 
-#### Pull Request Process
+#### Component Testing
+- Test component rendering
+- Test user interactions
+- Test contract integration
+- Test error states
 
-We follow the ["fork-and-pull" Git workflow](https://github.com/susam/gitpr)
+## 🔒 Security Guidelines
 
-1. Fork the repo
-2. Clone the project
-3. Create a new branch with a descriptive name
-4. Commit your changes to the new branch
-5. Push changes to your fork
-6. Open a PR in our repository and tag one of the maintainers to review your PR
+### Smart Contract Security
 
-Here are some tips for a high-quality pull request:
+1. **Access Control**
+   - Use OpenZeppelin's AccessControl
+   - Implement proper role-based permissions
+   - Validate all inputs
 
-- Create a title for the PR that accurately defines the work done.
-- Structure the description neatly to make it easy to consume by the readers. For example, you can include bullet points and screenshots instead of having one large paragraph.
-- Add the link to the issue if applicable.
-- Have a good commit message that summarises the work done.
+2. **Reentrancy Protection**
+   - Use ReentrancyGuard for state-changing functions
+   - Follow checks-effects-interactions pattern
 
-Once you submit your PR:
+3. **Integer Overflow**
+   - Use Solidity 0.8+ built-in overflow protection
+   - Validate arithmetic operations
 
-- We may ask questions, request additional information, or ask for changes to be made before a PR can be merged. Please note that these are to make the PR clear for everyone involved and aim to create a frictionless interaction process.
-- As you update your PR and apply changes, mark each conversation resolved.
+4. **External Calls**
+   - Minimize external contract interactions
+   - Use proper error handling
 
-Once the PR is approved, we'll "squash-and-merge" to keep the git commit history clean.
+### Frontend Security
+
+1. **Input Validation**
+   - Validate all user inputs
+   - Sanitize data before contract calls
+
+2. **Wallet Integration**
+   - Use established wallet connection patterns
+   - Handle connection errors gracefully
+
+3. **Transaction Safety**
+   - Provide clear transaction confirmations
+   - Implement proper error handling
+
+## 📝 Documentation
+
+### Code Documentation
+
+#### Solidity
+```solidity
+/**
+ * @title GhostDAGLottery
+ * @notice A decentralized lottery with 5+1 number system
+ * @dev Implements UUPS upgradeable pattern
+ */
+contract GhostDAGLottery {
+    /**
+     * @notice Purchase lottery tickets for the current draw
+     * @param tickets Array of ticket structs with selected numbers
+     * @dev Validates ticket numbers and processes payment
+     */
+    function purchaseTickets(Ticket[] memory tickets) external payable {
+        // Implementation
+    }
+}
+```
+
+#### TypeScript
+```typescript
+/**
+ * Component for purchasing lottery tickets
+ * @param onTicketPurchase - Callback function when tickets are purchased
+ * @returns JSX element for ticket purchase interface
+ */
+export const TicketPurchase: React.FC<TicketPurchaseProps> = ({ onTicketPurchase }) => {
+  // Implementation
+};
+```
+
+### README Updates
+
+When adding new features:
+1. Update the features list
+2. Add usage examples
+3. Update API documentation
+4. Include screenshots if UI changes
+
+## 🚀 Pull Request Process
+
+### Before Submitting
+
+1. **Code Quality**
+   - Run linting: `yarn lint`
+   - Run tests: `yarn test`
+   - Build successfully: `yarn build`
+
+2. **Documentation**
+   - Update relevant documentation
+   - Add inline code comments
+   - Update CHANGELOG.md if applicable
+
+3. **Testing**
+   - Add tests for new features
+   - Ensure all tests pass
+   - Test manually in development environment
+
+### Pull Request Template
+
+```markdown
+## Description
+Brief description of changes
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] Integration tests pass
+- [ ] Manual testing completed
+
+## Checklist
+- [ ] Code follows style guidelines
+- [ ] Self-review completed
+- [ ] Documentation updated
+- [ ] No breaking changes (or documented)
+```
+
+### Review Process
+
+1. **Automated Checks**
+   - CI/CD pipeline passes
+   - Code coverage maintained
+   - No security vulnerabilities
+
+2. **Code Review**
+   - At least one maintainer approval
+   - Address all review comments
+   - Resolve merge conflicts
+
+3. **Merge**
+   - Squash commits for clean history
+   - Update version if applicable
+   - Deploy to staging for testing
+
+## 🐛 Bug Reports
+
+### Before Reporting
+
+1. Check existing issues
+2. Reproduce the bug
+3. Test on latest version
+4. Gather relevant information
+
+### Bug Report Template
+
+```markdown
+## Bug Description
+Clear description of the bug
+
+## Steps to Reproduce
+1. Step one
+2. Step two
+3. Step three
+
+## Expected Behavior
+What should happen
+
+## Actual Behavior
+What actually happens
+
+## Environment
+- OS: [e.g., Windows 11]
+- Browser: [e.g., Chrome 120]
+- Node.js: [e.g., 18.17.0]
+- Wallet: [e.g., MetaMask 11.0.0]
+
+## Additional Context
+Screenshots, logs, or other relevant information
+```
+
+## 💡 Feature Requests
+
+### Feature Request Template
+
+```markdown
+## Feature Description
+Clear description of the proposed feature
+
+## Problem Statement
+What problem does this solve?
+
+## Proposed Solution
+How should this feature work?
+
+## Alternatives Considered
+Other solutions you've considered
+
+## Additional Context
+Any other relevant information
+```
+
+## 📞 Getting Help
+
+- **Documentation**: Check the [README](README.md) and [Wiki](https://github.com/NukeThemAII/GhostDAGLottery/wiki)
+- **Issues**: Search [existing issues](https://github.com/NukeThemAII/GhostDAGLottery/issues)
+- **Discussions**: Join [GitHub Discussions](https://github.com/NukeThemAII/GhostDAGLottery/discussions)
+
+## 🏆 Recognition
+
+Contributors will be recognized in:
+- README.md contributors section
+- Release notes for significant contributions
+- Special recognition for security findings
+
+## 📄 License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+---
+
+**Thank you for contributing to GhostDAG Lottery! 🎰**
