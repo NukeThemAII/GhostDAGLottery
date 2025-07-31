@@ -71,13 +71,21 @@ A decentralized lottery application built on the Kaspa blockchain ecosystem, fea
    yarn deploy --network localhost
    ```
 
-5. **Start frontend**
+5. **Initialize contract (Required for Admin access)**
+   ```bash
+   cd packages/hardhat
+   yarn hardhat run scripts/initializeContract.ts --network localhost
+   ```
+   
+   > **Note**: This step is crucial for Admin panel access. The script initializes the upgradeable contract and transfers ownership to your configured address.
+
+6. **Start frontend**
    ```bash
    cd packages/nextjs
    yarn start
    ```
 
-6. **Access the application**
+7. **Access the application**
    - Frontend: http://localhost:3000
    - Local blockchain: http://localhost:8545
 
@@ -277,6 +285,49 @@ yarn deploy
 - **State Management**: Efficient React state patterns
 - **Caching**: Smart contract call caching with wagmi
 - **Bundle Optimization**: Tree shaking and minification
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Admin Panel Not Visible
+**Problem**: Admin panel tab is not showing even when connected with the correct wallet.
+
+**Cause**: The contract was deployed but not initialized, leaving the owner as the zero address.
+
+**Solution**:
+1. Run the initialization script:
+   ```bash
+   cd packages/hardhat
+   yarn hardhat run scripts/initializeContract.ts --network localhost
+   ```
+2. Ensure your wallet address matches the one configured in the script
+3. Refresh the frontend application
+
+#### Contract Deployment Issues
+**Problem**: Contract deployment fails or shows unexpected behavior.
+
+**Solutions**:
+- Ensure local blockchain is running: `yarn chain`
+- Clear deployment artifacts: `rm -rf packages/hardhat/deployments/localhost`
+- Redeploy: `yarn deploy --network localhost`
+- Initialize after deployment
+
+#### Frontend Connection Issues
+**Problem**: Frontend cannot connect to the contract.
+
+**Solutions**:
+- Verify contract address in deployment files
+- Check network configuration in frontend
+- Ensure wallet is connected to localhost:8545
+- Clear browser cache and reconnect wallet
+
+### Development Tips
+
+- Always run initialization script after contract deployment
+- Use `yarn hardhat console --network localhost` for contract debugging
+- Check browser console for detailed error messages
+- Verify contract owner with: `await contract.owner()`
 
 ## 🤝 Contributing
 

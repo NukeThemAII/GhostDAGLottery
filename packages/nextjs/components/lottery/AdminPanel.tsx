@@ -1,47 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
-import { formatEther, parseEther } from "viem";
+import React, { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
-import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { Address } from "~~/components/scaffold-eth";
+import { useScaffoldContract, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { formatEther, parseEther } from "viem";
 import { notification } from "~~/utils/scaffold-eth";
 
 export const AdminPanel: React.FC = () => {
-  const { address: connectedAddress, isConnected } = useAccount();
-  const [newTicketPrice, setNewTicketPrice] = useState("");
-  const [newDrawInterval, setNewDrawInterval] = useState("");
-  const [donationAmount, setDonationAmount] = useState("");
-  const [emergencyWithdrawAmount, setEmergencyWithdrawAmount] = useState("");
+  const { address: connectedAddress } = useAccount();
+  const [isOwner, setIsOwner] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
-  // Contract interactions
-  const { writeContractAsync: conductDraw, isMining: isConductingDraw } = useScaffoldWriteContract("GhostDAGLottery");
-  const { writeContractAsync: setTicketPrice, isMining: isSettingPrice } = useScaffoldWriteContract("GhostDAGLottery");
-  const { writeContractAsync: setDrawInterval, isMining: isSettingInterval } = useScaffoldWriteContract("GhostDAGLottery");
-  const { writeContractAsync: pause, isMining: isPausing } = useScaffoldWriteContract("GhostDAGLottery");
-  const { writeContractAsync: unpause, isMining: isUnpausing } = useScaffoldWriteContract("GhostDAGLottery");
-  const { writeContractAsync: donate, isMining: isDonating } = useScaffoldWriteContract("GhostDAGLottery");
-  const { writeContractAsync: emergencyWithdraw, isMining: isWithdrawing } = useScaffoldWriteContract("GhostDAGLottery");
+  // Contract instance
+  const { data: contract } = useScaffoldContract({
+    contractName: "GhostDAGLottery",
+  });
+  
+  // Prevent unused variable warning
+  console.log("Contract loaded:", contract?.address);
 
-  // Get contract info
+  // Read contract state
   const { data: owner } = useScaffoldReadContract({
     contractName: "GhostDAGLottery",
     functionName: "owner",
-  });
-
-  const { data: lotteryInfo } = useScaffoldReadContract({
-    contractName: "GhostDAGLottery",
-    functionName: "getLotteryInfo",
-  });
-
-  const { data: ticketPrice } = useScaffoldReadContract({
-    contractName: "GhostDAGLottery",
-    functionName: "ticketPrice",
-  });
-
-  const { data: drawInterval } = useScaffoldReadContract({
-    contractName: "GhostDAGLottery",
-    functionName: "drawInterval",
   });
 
   const { data: isPaused } = useScaffoldReadContract({
@@ -49,165 +30,98 @@ export const AdminPanel: React.FC = () => {
     functionName: "paused",
   });
 
+  const { data: excessFunds } = useScaffoldReadContract({
+    contractName: "GhostDAGLottery",
+    functionName: "getExcessFunds",
+  });
+
   const { data: contractBalance } = useScaffoldReadContract({
     contractName: "GhostDAGLottery",
-    functionName: "getContractBalance",
+    functionName: "getAnalytics",
   });
 
-  const { data: totalDonations } = useScaffoldReadContract({
+  // Write functions
+  const { writeContractAsync: pauseLottery, isMining: isPausing } = useScaffoldWriteContract({
     contractName: "GhostDAGLottery",
-    functionName: "totalDonationsReceived",
   });
 
-  const isOwner = connectedAddress && owner && connectedAddress.toLowerCase() === owner.toLowerCase();
-  const currentDrawId = lotteryInfo?.[0] || 0n;
-  const nextDrawTime = lotteryInfo?.[1] || 0n;
-  const prizePool = lotteryInfo?.[2] || 0n;
-  const ticketsSold = lotteryInfo?.[3] || 0n;
+  const { writeContractAsync: unpauseLottery, isMining: isUnpausing } = useScaffoldWriteContract({
+    contractName: "GhostDAGLottery",
+  });
 
-  const canConductDraw = () => {
-    if (!nextDrawTime) return false;
-    const now = Math.floor(Date.now() / 1000);
-    return now >= Number(nextDrawTime) && Number(ticketsSold) > 0;
-  };
+  const { writeContractAsync: withdrawExcessFunds, isMining: isWithdrawing } = useScaffoldWriteContract({
+    contractName: "GhostDAGLottery",
+  });
 
-  const handleConductDraw = async () => {
-    if (!isOwner) {
-      notification.error("Only the contract owner can conduct draws");
-      return;
+  const { writeContractAsync: executeDraw, isMining: isExecutingDraw } = useScaffoldWriteContract({
+    contractName: "GhostDAGLottery",
+  });
+
+  // Check if connected address is owner
+  useEffect(() => {
+    if (connectedAddress && owner) {
+      setIsOwner(connectedAddress.toLowerCase() === owner.toLowerCase());
     }
+  }, [connectedAddress, owner]);
 
-    if (!canConductDraw()) {
-      notification.error("Cannot conduct draw yet. Either time hasn't passed or no tickets sold.");
-      return;
-    }
-
+  const handlePause = async () => {
     try {
-      await conductDraw({
-        functionName: "conductDraw",
+      await pauseLottery({
+        functionName: "pause",
       });
-
-      notification.success(`Draw #${currentDrawId} conducted successfully!`);
+      notification.success("Lottery paused successfully!");
     } catch (error) {
-      console.error("Error conducting draw:", error);
-      notification.error("Failed to conduct draw");
+      console.error("Error pausing lottery:", error);
+      notification.error("Failed to pause lottery");
     }
   };
 
-  const handleSetTicketPrice = async () => {
-    if (!isOwner || !newTicketPrice) {
-      notification.error("Invalid input or insufficient permissions");
-      return;
-    }
-
+  const handleUnpause = async () => {
     try {
-      const priceInWei = parseEther(newTicketPrice);
-      await setTicketPrice({
-        functionName: "setTicketPrice",
-        args: [priceInWei],
+      await unpauseLottery({
+        functionName: "unpause",
       });
-
-      notification.success(`Ticket price updated to ${newTicketPrice} KAS`);
-      setNewTicketPrice("");
+      notification.success("Lottery unpaused successfully!");
     } catch (error) {
-      console.error("Error setting ticket price:", error);
-      notification.error("Failed to update ticket price");
+      console.error("Error unpausing lottery:", error);
+      notification.error("Failed to unpause lottery");
     }
   };
 
-  const handleSetDrawInterval = async () => {
-    if (!isOwner || !newDrawInterval) {
-      notification.error("Invalid input or insufficient permissions");
-      return;
-    }
-
+  const handleWithdrawExcess = async () => {
     try {
-      const intervalInSeconds = BigInt(parseInt(newDrawInterval) * 3600); // Convert hours to seconds
-      await setDrawInterval({
-        functionName: "setDrawInterval",
-        args: [intervalInSeconds],
+      const amount = withdrawAmount ? parseEther(withdrawAmount) : undefined;
+      await withdrawExcessFunds({
+        functionName: "withdrawExcessFunds",
+        args: amount ? [amount] : [],
       });
-
-      notification.success(`Draw interval updated to ${newDrawInterval} hours`);
-      setNewDrawInterval("");
+      notification.success("Excess funds withdrawn successfully!");
+      setWithdrawAmount("");
     } catch (error) {
-      console.error("Error setting draw interval:", error);
-      notification.error("Failed to update draw interval");
+      console.error("Error withdrawing excess funds:", error);
+      notification.error("Failed to withdraw excess funds");
     }
   };
 
-  const handlePauseToggle = async () => {
-    if (!isOwner) {
-      notification.error("Only the contract owner can pause/unpause");
-      return;
-    }
-
+  const handleExecuteDraw = async () => {
     try {
-      if (isPaused) {
-        await unpause({
-          functionName: "unpause",
-        });
-        notification.success("Contract unpaused successfully!");
-      } else {
-        await pause({
-          functionName: "pause",
-        });
-        notification.success("Contract paused successfully!");
-      }
-    } catch (error) {
-      console.error("Error toggling pause:", error);
-      notification.error("Failed to toggle pause state");
-    }
-  };
-
-  const handleDonate = async () => {
-    if (!donationAmount) {
-      notification.error("Please enter a donation amount");
-      return;
-    }
-
-    try {
-      const donationInWei = parseEther(donationAmount);
-      await donate({
-        functionName: "donate",
-        value: donationInWei,
+      await executeDraw({
+        functionName: "executeDraw",
       });
-
-      notification.success(`Donated ${donationAmount} KAS to the lottery!`);
-      setDonationAmount("");
+      notification.success("Draw executed successfully!");
     } catch (error) {
-      console.error("Error donating:", error);
-      notification.error("Failed to donate");
+      console.error("Error executing draw:", error);
+      notification.error("Failed to execute draw");
     }
   };
 
-  const handleEmergencyWithdraw = async () => {
-    if (!isOwner || !emergencyWithdrawAmount) {
-      notification.error("Invalid input or insufficient permissions");
-      return;
-    }
-
-    try {
-      const withdrawInWei = parseEther(emergencyWithdrawAmount);
-      await emergencyWithdraw({
-        functionName: "emergencyWithdraw",
-        args: [withdrawInWei],
-      });
-
-      notification.success(`Emergency withdrawal of ${emergencyWithdrawAmount} KAS completed`);
-      setEmergencyWithdrawAmount("");
-    } catch (error) {
-      console.error("Error with emergency withdrawal:", error);
-      notification.error("Failed to perform emergency withdrawal");
-    }
-  };
-
-  if (!isConnected) {
+  if (!connectedAddress) {
     return (
       <div className="text-center py-12">
-        <div className="text-6xl mb-4">🔌</div>
-        <h3 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h3>
-        <p className="text-gray-400">Please connect your wallet to access admin features</p>
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl max-w-md mx-auto">
+          <h2 className="text-2xl font-bold text-white mb-4">Admin Panel</h2>
+          <p className="text-white/80">Please connect your wallet to access the admin panel.</p>
+        </div>
       </div>
     );
   }
@@ -215,12 +129,10 @@ export const AdminPanel: React.FC = () => {
   if (!isOwner) {
     return (
       <div className="text-center py-12">
-        <div className="text-6xl mb-4">🚫</div>
-        <h3 className="text-2xl font-bold text-white mb-2">Access Denied</h3>
-        <p className="text-gray-400 mb-4">Only the contract owner can access this panel</p>
-        <div className="inline-flex items-center space-x-2 bg-red-500/20 backdrop-blur-sm border border-red-500/30 rounded-full px-4 py-2">
-          <span className="text-red-400 font-medium">Contract Owner:</span>
-          <Address address={owner} size="sm" />
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl max-w-md mx-auto">
+          <h2 className="text-2xl font-bold text-white mb-4">Access Denied</h2>
+          <p className="text-white/80">You are not authorized to access the admin panel.</p>
+          <p className="text-white/60 text-sm mt-2">Only the contract owner can access this area.</p>
         </div>
       </div>
     );
@@ -230,256 +142,173 @@ export const AdminPanel: React.FC = () => {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-white mb-2">⚙️ Admin Panel</h2>
-        <p className="text-gray-400">Manage lottery operations and settings</p>
-        <div className="mt-4">
-          <div className="inline-flex items-center space-x-2 bg-green-500/20 backdrop-blur-sm border border-green-500/30 rounded-full px-4 py-2">
-            <span className="text-green-400 font-medium">👑 Owner Access</span>
+        <h1 className="text-4xl font-bold text-white mb-2">⚙️ Admin Panel</h1>
+        <p className="text-white/80">Manage the GhostDAG Lottery system</p>
+      </div>
+
+      {/* Status Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+          <h3 className="text-lg font-semibold text-white mb-2">Lottery Status</h3>
+          <div className="flex items-center space-x-2">
+            <div className={`w-3 h-3 rounded-full ${isPaused ? 'bg-red-500' : 'bg-green-500'}`}></div>
+            <span className="text-white/90">{isPaused ? 'Paused' : 'Active'}</span>
           </div>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+          <h3 className="text-lg font-semibold text-white mb-2">Excess Funds</h3>
+          <p className="text-2xl font-bold text-white">
+            {excessFunds ? formatEther(excessFunds) : '0'} KAS
+          </p>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
+          <h3 className="text-lg font-semibold text-white mb-2">Total Revenue</h3>
+          <p className="text-2xl font-bold text-white">
+            {contractBalance?.totalRevenue ? formatEther(contractBalance.totalRevenue) : '0'} KAS
+          </p>
         </div>
       </div>
 
-      {/* Contract Status */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">📊 Contract Status</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className={`text-3xl font-bold mb-2 ${
-              isPaused ? "text-red-400" : "text-green-400"
-            }`}>
-              {isPaused ? "⏸️" : "▶️"}
-            </div>
-            <div className="text-gray-400">
-              {isPaused ? "Paused" : "Active"}
-            </div>
-          </div>
+      {/* Control Panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Lottery Controls */}
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
+          <h2 className="text-2xl font-bold text-white mb-6">🎲 Lottery Controls</h2>
           
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-400 mb-2">
-              {contractBalance ? formatEther(contractBalance) : "0"}
-            </div>
-            <div className="text-gray-400">Contract Balance (KAS)</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-3xl font-bold text-purple-400 mb-2">
-              {ticketPrice ? formatEther(ticketPrice) : "0"}
-            </div>
-            <div className="text-gray-400">Ticket Price (KAS)</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-3xl font-bold text-yellow-400 mb-2">
-              {drawInterval ? Math.floor(Number(drawInterval) / 3600) : "0"}
-            </div>
-            <div className="text-gray-400">Draw Interval (Hours)</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Draw Management */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">🎲 Draw Management</h3>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white/5 rounded-xl p-4">
-            <h4 className="text-lg font-semibold text-white mb-2">Current Draw Info</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Draw ID:</span>
-                <span className="text-white font-semibold">#{currentDrawId.toString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Prize Pool:</span>
-                <span className="text-green-400 font-semibold">{formatEther(prizePool)} KAS</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Tickets Sold:</span>
-                <span className="text-blue-400 font-semibold">{ticketsSold.toString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Next Draw:</span>
-                <span className="text-purple-400 font-semibold">
-                  {nextDrawTime ? new Date(Number(nextDrawTime) * 1000).toLocaleString() : "Not set"}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/5 rounded-xl p-4">
-            <h4 className="text-lg font-semibold text-white mb-2">Draw Actions</h4>
-            <div className="space-y-3">
+          <div className="space-y-4">
+            {isPaused ? (
               <button
-                onClick={handleConductDraw}
-                disabled={isConductingDraw || !canConductDraw()}
-                className={`
-                  w-full px-4 py-3 rounded-lg font-semibold transition-all transform hover:scale-105
-                  ${
-                    canConductDraw() && !isConductingDraw
-                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
-                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  }
-                `}
+                onClick={handleUnpause}
+                disabled={isUnpausing}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {isConductingDraw ? "🔄 Conducting..." : "🎲 Conduct Draw"}
-              </button>
-              
-              <div className="text-xs text-gray-400 text-center">
-                {!canConductDraw() && (
-                  Number(ticketsSold) === 0 
-                    ? "No tickets sold yet"
-                    : "Draw time not reached"
+                {isUnpausing ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Unpausing...</span>
+                  </div>
+                ) : (
+                  '▶️ Unpause Lottery'
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Settings Management */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">⚙️ Lottery Settings</h3>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Ticket Price */}
-          <div className="bg-white/5 rounded-xl p-4">
-            <h4 className="text-lg font-semibold text-white mb-3">💰 Ticket Price</h4>
-            <div className="space-y-3">
-              <input
-                type="number"
-                step="0.01"
-                placeholder="New price in KAS"
-                value={newTicketPrice}
-                onChange={(e) => setNewTicketPrice(e.target.value)}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
-              />
-              <button
-                onClick={handleSetTicketPrice}
-                disabled={isSettingPrice || !newTicketPrice}
-                className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-600 hover:to-purple-600 transition-all"
-              >
-                {isSettingPrice ? "🔄 Updating..." : "💰 Update Price"}
               </button>
-            </div>
-          </div>
-          
-          {/* Draw Interval */}
-          <div className="bg-white/5 rounded-xl p-4">
-            <h4 className="text-lg font-semibold text-white mb-3">⏰ Draw Interval</h4>
-            <div className="space-y-3">
-              <input
-                type="number"
-                placeholder="Interval in hours"
-                value={newDrawInterval}
-                onChange={(e) => setNewDrawInterval(e.target.value)}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
-              />
+            ) : (
               <button
-                onClick={handleSetDrawInterval}
-                disabled={isSettingInterval || !newDrawInterval}
-                className="w-full px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-purple-600 hover:to-pink-600 transition-all"
+                onClick={handlePause}
+                disabled={isPausing}
+                className="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {isSettingInterval ? "🔄 Updating..." : "⏰ Update Interval"}
+                {isPausing ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Pausing...</span>
+                  </div>
+                ) : (
+                  '⏸️ Pause Lottery'
+                )}
               </button>
-            </div>
-          </div>
-        </div>
-      </div>
+            )}
 
-      {/* Contract Controls */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">🔧 Contract Controls</h3>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pause/Unpause */}
-          <div className="bg-white/5 rounded-xl p-4">
-            <h4 className="text-lg font-semibold text-white mb-3">
-              {isPaused ? "▶️ Unpause Contract" : "⏸️ Pause Contract"}
-            </h4>
-            <p className="text-gray-400 text-sm mb-3">
-              {isPaused 
-                ? "Resume lottery operations and ticket sales"
-                : "Temporarily halt all lottery operations"}
-            </p>
             <button
-              onClick={handlePauseToggle}
-              disabled={isPausing || isUnpausing}
-              className={`
-                w-full px-4 py-3 rounded-lg font-semibold transition-all transform hover:scale-105
-                ${
-                  isPaused
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
-                    : "bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600"
-                }
-              `}
+              onClick={handleExecuteDraw}
+              disabled={isExecutingDraw || isPaused}
+              className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {(isPausing || isUnpausing) ? "🔄 Processing..." : 
-               isPaused ? "▶️ Unpause" : "⏸️ Pause"}
+              {isExecutingDraw ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Executing Draw...</span>
+                </div>
+              ) : (
+                '🎲 Execute Draw Now'
+              )}
             </button>
           </div>
+
+          <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10">
+            <h4 className="text-white font-semibold mb-2">⚠️ Important Notes</h4>
+            <ul className="text-white/80 text-sm space-y-1">
+              <li>• Pausing stops all ticket purchases</li>
+              <li>• Draws can only be executed when unpaused</li>
+              <li>• Manual draw execution overrides the timer</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Financial Controls */}
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
+          <h2 className="text-2xl font-bold text-white mb-6">💰 Financial Controls</h2>
           
-          {/* Emergency Withdraw */}
-          <div className="bg-white/5 rounded-xl p-4">
-            <h4 className="text-lg font-semibold text-white mb-3">🚨 Emergency Withdraw</h4>
-            <div className="space-y-3">
+          <div className="space-y-6">
+            <div>
+              <label className="block text-white/90 text-sm font-medium mb-2">
+                Withdraw Amount (KAS)
+              </label>
               <input
                 type="number"
                 step="0.01"
-                placeholder="Amount in KAS"
-                value={emergencyWithdrawAmount}
-                onChange={(e) => setEmergencyWithdrawAmount(e.target.value)}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-red-500"
+                placeholder="Leave empty to withdraw all excess"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
-              <button
-                onClick={handleEmergencyWithdraw}
-                disabled={isWithdrawing || !emergencyWithdrawAmount}
-                className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-red-600 hover:to-orange-600 transition-all"
-              >
-                {isWithdrawing ? "🔄 Withdrawing..." : "🚨 Emergency Withdraw"}
-              </button>
+            </div>
+
+            <button
+              onClick={handleWithdrawExcess}
+              disabled={isWithdrawing || !excessFunds || excessFunds === 0n}
+              className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isWithdrawing ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Withdrawing...</span>
+                </div>
+              ) : (
+                '💰 Withdraw Excess Funds'
+              )}
+            </button>
+
+            <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+              <h4 className="text-white font-semibold mb-2">💡 Withdrawal Info</h4>
+              <ul className="text-white/80 text-sm space-y-1">
+                <li>• Available: {excessFunds ? formatEther(excessFunds) : '0'} KAS</li>
+                <li>• Only excess funds can be withdrawn</li>
+                <li>• Prize pool funds are protected</li>
+                <li>• Specify amount or leave empty for all</li>
+              </ul>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Donation Section */}
-      <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-2xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">💝 Support the Lottery</h3>
+      {/* Analytics Section */}
+      <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
+        <h2 className="text-2xl font-bold text-white mb-6">📊 System Analytics</h2>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white/5 rounded-xl p-4">
-            <h4 className="text-lg font-semibold text-white mb-2">Donation Stats</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Total Donations:</span>
-                <span className="text-yellow-400 font-semibold">
-                  {totalDonations ? formatEther(totalDonations) : "0"} KAS
-                </span>
-              </div>
+        {contractBalance && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <p className="text-white/60 text-sm">Total Draws</p>
+              <p className="text-2xl font-bold text-white">{contractBalance.totalDraws?.toString() || '0'}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-white/60 text-sm">Total Tickets</p>
+              <p className="text-2xl font-bold text-white">{contractBalance.totalTicketsSold?.toString() || '0'}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-white/60 text-sm">Total Players</p>
+              <p className="text-2xl font-bold text-white">{contractBalance.totalPlayers?.toString() || '0'}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-white/60 text-sm">Total Prizes</p>
+              <p className="text-2xl font-bold text-white">
+                {contractBalance.totalPrizesDistributed ? formatEther(contractBalance.totalPrizesDistributed) : '0'} KAS
+              </p>
             </div>
           </div>
-          
-          <div className="bg-white/5 rounded-xl p-4">
-            <h4 className="text-lg font-semibold text-white mb-3">💝 Make a Donation</h4>
-            <div className="space-y-3">
-              <input
-                type="number"
-                step="0.01"
-                placeholder="Donation amount in KAS"
-                value={donationAmount}
-                onChange={(e) => setDonationAmount(e.target.value)}
-                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-500"
-              />
-              <button
-                onClick={handleDonate}
-                disabled={isDonating || !donationAmount}
-                className="w-full px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:from-yellow-600 hover:to-orange-600 transition-all"
-              >
-                {isDonating ? "🔄 Donating..." : "💝 Donate"}
-              </button>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

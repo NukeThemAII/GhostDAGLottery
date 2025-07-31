@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAccount } from "wagmi";
 import { hardhat } from "viem/chains";
-import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, BugAntIcon, CogIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 type HeaderMenuLink = {
   label: string;
@@ -29,10 +31,37 @@ export const menuLinks: HeaderMenuLink[] = [
 
 export const HeaderMenuLinks = () => {
   const pathname = usePathname();
+  const { address: connectedAddress } = useAccount();
+  const [isOwner, setIsOwner] = useState(false);
+
+  // Read contract owner
+  const { data: owner } = useScaffoldReadContract({
+    contractName: "GhostDAGLottery",
+    functionName: "owner",
+  });
+
+  // Check if connected address is owner
+  useEffect(() => {
+    if (connectedAddress && owner) {
+      setIsOwner(connectedAddress.toLowerCase() === owner.toLowerCase());
+    } else {
+      setIsOwner(false);
+    }
+  }, [connectedAddress, owner]);
+
+  // Create dynamic menu links including admin if user is owner
+  const dynamicMenuLinks = [...menuLinks];
+  if (isOwner) {
+    dynamicMenuLinks.push({
+      label: "Admin",
+      href: "/admin",
+      icon: <CogIcon className="h-4 w-4" />,
+    });
+  }
 
   return (
     <>
-      {menuLinks.map(({ label, href, icon }) => {
+      {dynamicMenuLinks.map(({ label, href, icon }) => {
         const isActive = pathname === href;
         return (
           <li key={href}>

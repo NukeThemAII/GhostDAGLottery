@@ -31,11 +31,6 @@ export const DrawHistory: React.FC = () => {
     return new Date(Number(timestamp) * 1000).toLocaleString();
   };
 
-  const formatWinningNumbers = (numbers: readonly bigint[]) => {
-    if (!numbers || numbers.length === 0) return "Not available";
-    return numbers.map(n => Number(n)).join(", ");
-  };
-
   const getPrizeDistribution = (draw: any) => {
     if (!draw) return [];
     

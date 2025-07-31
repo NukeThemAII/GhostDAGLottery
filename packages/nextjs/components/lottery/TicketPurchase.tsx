@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { parseEther, formatEther } from "viem";
+import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldWriteContract, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
@@ -12,7 +12,7 @@ interface TicketNumbers {
 }
 
 export const TicketPurchase: React.FC = () => {
-  const { address: connectedAddress, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const [tickets, setTickets] = useState<TicketNumbers[]>([]);
   const [currentTicket, setCurrentTicket] = useState<TicketNumbers>({
     mainNumbers: [],
@@ -35,7 +35,6 @@ export const TicketPurchase: React.FC = () => {
     functionName: "getLotteryInfo",
   });
 
-  const currentDrawId = lotteryInfo?.[0] || 0n;
   const nextDrawTime = lotteryInfo?.[1] || 0n;
 
   // Generate random numbers for quick pick

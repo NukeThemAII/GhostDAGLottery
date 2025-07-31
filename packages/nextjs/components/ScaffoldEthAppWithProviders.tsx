@@ -12,6 +12,7 @@ import { Header } from "~~/components/Header";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
 import { useInitializeNativeCurrencyPrice } from "~~/hooks/scaffold-eth";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
+import { setBurnerWalletPrivateKey } from "~~/utils/burnerWallet";
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   useInitializeNativeCurrencyPrice();
@@ -43,6 +44,8 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
 
   useEffect(() => {
     setMounted(true);
+    // Set the burner wallet private key
+    setBurnerWalletPrivateKey("0x66e65978151e1c42dc0382cd23769bf5c7b61c29d7be2ddcdc1e149af5e76332");
   }, []);
 
   return (

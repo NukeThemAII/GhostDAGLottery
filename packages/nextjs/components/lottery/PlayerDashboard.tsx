@@ -37,7 +37,7 @@ export const PlayerDashboard: React.FC = () => {
   });
 
   // Get unclaimed prizes
-  const { data: unclaimedPrizes, isLoading: unclaimedLoading } = useScaffoldReadContract({
+  const { data: unclaimedPrizes } = useScaffoldReadContract({
     contractName: "GhostDAGLottery",
     functionName: "getUnclaimedPrizes",
     args: connectedAddress ? [connectedAddress] : undefined,
@@ -66,34 +66,7 @@ export const PlayerDashboard: React.FC = () => {
     }
   };
 
-  const formatTicketNumbers = (ticket: any) => {
-    if (!ticket) return "Invalid ticket";
-    const mainNumbers = ticket.mainNumbers?.map((n: bigint) => Number(n)).join(", ") || "N/A";
-    const bonusNumber = ticket.bonusNumber ? Number(ticket.bonusNumber) : "N/A";
-    return `Main: [${mainNumbers}] | Bonus: ${bonusNumber}`;
-  };
 
-  const getMatchingNumbers = (ticket: any, winningNumbers: readonly bigint[], winningBonus: bigint) => {
-    if (!ticket || !winningNumbers) return { mainMatches: 0, bonusMatch: false };
-    
-    const ticketMainNumbers = ticket.mainNumbers?.map((n: bigint) => Number(n)) || [];
-    const winningMainNumbers = winningNumbers.slice(0, 5).map(n => Number(n));
-    
-    const mainMatches = ticketMainNumbers.filter(num => winningMainNumbers.includes(num)).length;
-    const bonusMatch = ticket.bonusNumber && Number(ticket.bonusNumber) === Number(winningBonus);
-    
-    return { mainMatches, bonusMatch };
-  };
-
-  const getPrizeTier = (mainMatches: number, bonusMatch: boolean) => {
-    if (mainMatches === 5 && bonusMatch) return "🏆 Jackpot (5+1)";
-    if (mainMatches === 5) return "🥈 2nd Prize (5+0)";
-    if (mainMatches === 4 && bonusMatch) return "🥉 3rd Prize (4+1)";
-    if (mainMatches === 4) return "🎖️ 4th Prize (4+0)";
-    if (mainMatches === 3 && bonusMatch) return "🏅 5th Prize (3+1)";
-    if (mainMatches === 3) return "🎗️ 6th Prize (3+0)";
-    return "❌ No Prize";
-  };
 
   if (!isConnected) {
     return (
@@ -221,7 +194,7 @@ export const PlayerDashboard: React.FC = () => {
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🎫</div>
             <h4 className="text-lg font-semibold text-white mb-2">No Tickets Found</h4>
-            <p className="text-gray-400">You don't have any tickets for this draw.</p>
+            <p className="text-gray-400">You don&apos;t have any tickets for this draw.</p>
           </div>
         )}
       </div>
@@ -259,7 +232,7 @@ export const PlayerDashboard: React.FC = () => {
             <h4 className="text-lg font-semibold text-white mb-2">No Winnings</h4>
             <p className="text-gray-400">
               {selectedDrawId >= currentDrawId 
-                ? "This draw hasn't been completed yet." 
+                ? "This draw hasn&apos;t been completed yet." 
                 : "Better luck next time!"}
             </p>
           </div>
